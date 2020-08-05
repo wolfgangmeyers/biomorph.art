@@ -47,8 +47,9 @@ const instructionMutators = {
     "strokeStyle": mutateStrokeStyleInstruction,
     "position": mutatePositionInstruction,
     "begin": mutateBeginInstruction,
-    "lineWidth": mutateBeginInstruction,
+    "lineWidth": mutateLineWidthInstruction,
     "speed": mutateBeginInstruction,
+    "end": mutateBeginInstruction,
 }
 
 function generateStrokeStyleInstruction(): Instruction {
@@ -90,13 +91,15 @@ function generateSpeedInstruction(): Instruction {
 }
 
 const config = {
-    maxMutationIterations: 100,
+    maxMutationIterations: 200,
     addPositionProbability: 0.3,
     addStrokeStyleProbability: 0.1,
     addSpeedProbability: 0.3,
     addLineWidthProbability: 0.1,
+
     mutateInstructionProbability: 0.3,
     removeInstructionProbability: 0.3,
+    startNewPathProbability: 0.005,
 
     maxPositionMutation: Math.PI / 5,
     maxColorMutation: 10,
@@ -127,6 +130,14 @@ export function mutatePainting(painting: Painting) {
             const randomInstruction = painting.instructions[Math.floor(Math.random() * painting.instructions.length)];
             instructionMutators[randomInstruction.type](randomInstruction);
         }
+        // TODO: maybe remodel to have multiple paths?
+        if (Math.random() < config.startNewPathProbability) {
+            painting.instructions.push({
+                type: "end", args: null
+            })
+            // TODO: better way to pass canvas width here?
+            painting.instructions.push(generateBeginInstruction(400, 400));
+        }
     }
 
 }
@@ -137,11 +148,11 @@ export function mutateBeginInstruction(instruction: Instruction) {
 
 export function mutateStrokeStyleInstruction(instruction: Instruction) {
     instruction.args.r *= Math.random() + 0.5;
-    instruction.args.r = norm(instruction.args.r, 0, config.maxColorMutation);
+    instruction.args.r = norm(instruction.args.r, -config.maxColorMutation, config.maxColorMutation);
     instruction.args.g *= Math.random() + 0.5;
-    instruction.args.g = norm(instruction.args.g, 0, config.maxColorMutation);
+    instruction.args.g = norm(instruction.args.g, -config.maxColorMutation, config.maxColorMutation);
     instruction.args.b *= Math.random() + 0.5;
-    instruction.args.b = norm(instruction.args.b, 0, config.maxColorMutation);
+    instruction.args.b = norm(instruction.args.b, -config.maxColorMutation, config.maxColorMutation);
 }
 
 export function mutatePositionInstruction(instruction: Instruction) {
@@ -149,6 +160,15 @@ export function mutatePositionInstruction(instruction: Instruction) {
     instruction.args.angle = wrap(instruction.args.angle + mutationAmount, 0, Math.PI * 2);
 }
 
+function mutateLineWidthInstruction(instruction: Instruction) {
+    const mutationAmount = Math.random() * config.maxLineWidthMutation * 2 - config.maxLineWidthMutation;
+    instruction.args.amount = norm(instruction.args.amount + mutationAmount, -config.maxLineWidthMutation, config.maxLineWidthMutation);
+}
+
+function mutateSpeedInstruction(instruction: Instruction) {
+    const mutationAmount = Math.random() * config.maxSpeedMutation * 2 - config.maxSpeedMutation;
+    instruction.args.amount = norm(instruction.args.amount + mutationAmount, -config.maxSpeedMutation, config.maxSpeedMutation);
+}
 
 export function clone<T>(item: T): T {
     return JSON.parse(JSON.stringify(item));

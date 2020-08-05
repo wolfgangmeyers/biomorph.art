@@ -1,0 +1,13 @@
+{
+    "name": "biomorphic",
+    "version": "1.0.0",
+    "main": "index.js",
+    "license": "Unlicense",
+    "devDependencies": {
+        "parcel": "^1.12.4",
+        "typescript": "^3.9.7"
+    },
+    "scripts": {
+        "dev": "parcel index.html"
+    }
+}

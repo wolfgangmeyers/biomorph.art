@@ -9,7 +9,8 @@
         "typescript": "^3.9.7"
     },
     "scripts": {
-        "dev": "parcel index.html"
+        "dev": "parcel index.html",
+        "build": "parcel build index.html"
     },
     "dependencies": {
         "d3-color": "^1.4.1"

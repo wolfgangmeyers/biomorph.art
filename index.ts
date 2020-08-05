@@ -7,12 +7,23 @@ let parentCanvas: HTMLCanvasElement;
 let parent: Painting;
 let children: Array<Painting>;
 
-const numChildren = 8;
+const history: Painting[] = [];
+
+const numChildren = 7;
+
+const undo = () => {
+    if (history.length > 0) {
+        parent = history.pop();
+        render(parent, parentCanvas, "Parent");
+        generate();
+    }
+};
 
 const setupChildCanvas = (canvas: HTMLCanvasElement, painting: Painting) => {
     canvas.addEventListener("click", () => {
+        history.push(parent);
         parent = painting;
-        render(painting, parentCanvas);
+        render(painting, parentCanvas, "Parent");
         generate();
     });
 }
@@ -38,7 +49,7 @@ const generate = () => {
         mutatePainting(newPainting);
         children.push(newPainting);
 
-        render(newPainting, canvas);
+        render(newPainting, canvas, "Child");
         setupChildCanvas(canvas, newPainting);
     }
 };
@@ -50,9 +61,11 @@ const randomize = () => {
         instructions.push(generateRandomInstruction());
     }
     parent = {
-        instructions
+        paths: [
+            {instructions}
+        ]
     };
-    render(parent, parentCanvas);
+    render(parent, parentCanvas, "Parent");
     generate();
 };
 
@@ -60,8 +73,12 @@ const onLoad = () => {
     parentCanvas = document.getElementById("canvas") as HTMLCanvasElement;
     randomize();
 
-    const generateButton = document.getElementById("generate") as HTMLButtonElement;
-    generateButton.addEventListener("click", generate);
+    const restartButton = document.getElementById("restart");
+    restartButton.addEventListener("click", randomize);
+
+    document.getElementById("undo").addEventListener("click", undo);
+
+    parentCanvas.addEventListener("click", generate);
 }
 
 if (document.readyState === "complete") {

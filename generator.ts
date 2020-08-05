@@ -100,6 +100,7 @@ const config = {
     mutateInstructionProbability: 0.3,
     removeInstructionProbability: 0.3,
     startNewPathProbability: 0.005,
+    removePathProbability: 0.005,
 
     maxPositionMutation: Math.PI / 5,
     maxColorMutation: 10,
@@ -110,33 +111,39 @@ const config = {
 export function mutatePainting(painting: Painting) {
     const iterations = Math.floor(Math.random() * config.maxMutationIterations);
     for (let i = 0; i < iterations; i++) {
+        const path = painting.paths[Math.floor(Math.random() * painting.paths.length)];
         if (Math.random() < config.addPositionProbability) {
-            painting.instructions.push(generatePositionInstruction());
+            path.instructions.push(generatePositionInstruction());
         }
         if (Math.random() < config.addStrokeStyleProbability) {
-            painting.instructions.push(generateStrokeStyleInstruction());
+            path.instructions.push(generateStrokeStyleInstruction());
         }
         if (Math.random() < config.addLineWidthProbability) {
-            painting.instructions.push(generateLineWidthInstruction());
+            path.instructions.push(generateLineWidthInstruction());
         }
         if (Math.random() < config.addSpeedProbability) {
-            painting.instructions.push(generateSpeedInstruction());
+            path.instructions.push(generateSpeedInstruction());
         }
-        if (Math.random() < config.removeInstructionProbability && painting.instructions.length > 1) {
-            let index = Math.floor(Math.random() * painting.instructions.length - 1) + 1;
-            painting.instructions.splice(index, 1);
+        if (Math.random() < config.removeInstructionProbability && path.instructions.length > 1) {
+            let index = Math.floor(Math.random() * path.instructions.length - 1) + 1;
+            path.instructions.splice(index, 1);
         }
         if (Math.random() < config.mutateInstructionProbability) {
-            const randomInstruction = painting.instructions[Math.floor(Math.random() * painting.instructions.length)];
+            const randomInstruction = path.instructions[Math.floor(Math.random() * path.instructions.length)];
             instructionMutators[randomInstruction.type](randomInstruction);
         }
         // TODO: maybe remodel to have multiple paths?
         if (Math.random() < config.startNewPathProbability) {
-            painting.instructions.push({
-                type: "end", args: null
+            painting.paths.push({
+                instructions: [
+                    // TODO: refactor canvas width out
+                    generateBeginInstruction(400, 400),
+                    generatePositionInstruction(),
+                ]
             })
-            // TODO: better way to pass canvas width here?
-            painting.instructions.push(generateBeginInstruction(400, 400));
+        }
+        if (Math.random() < config.removePathProbability && painting.paths.length > 1) {
+            painting.paths.splice(Math.floor(Math.random() * painting.paths.length), 1);
         }
     }
 

@@ -1,97 +1,154 @@
-import { Point, Path, Painting } from "./model";
+import * as d3 from "d3-color";
 
-export function randomPath(cfg: MutateConfig): Path {
-    const numPoints = Math.round(Math.random() * (cfg.maxPoints - cfg.minPoints) + cfg.minPoints);
-    const points: Array<Point> = [];
-    for (let i = 0; i < numPoints; i++) {
-        const x = Math.random() * cfg.canvasWidth;
-        const y = Math.random() * cfg.canvasHeight;
-        points.push({x, y});
-    }
-    const strokeStyle = "#" + Math.floor(Math.random()*16777215).toString(16);
-    const lineWidth = Math.random() * (cfg.maxLineWidth - cfg.minLineWidth) + cfg.minLineWidth;
+import { Painting } from "./model";
+import { Instruction, InstructionType } from "./pathbuilder";
+import { norm, wrap } from "./norm";
+
+const instructionTypes: InstructionType[] = [
+    "strokeStyle",
+    "position",
+    "lineWidth",
+    "speed"
+];
+
+export function generateBeginInstruction(canvasWidth: number, canvasHeight: number): Instruction {
+
     return {
-        lineWidth, strokeStyle, points
-    }
-}
-
-export function mutatePoint(point: Point, min: number, max: number) {
-    let xMutationAmount = Math.random() * (max - min) + min;
-    if (Math.random() > 0.5) {
-        xMutationAmount *= -1;
-    }
-    let yMutationAmount = Math.random() * (max - min) + min;
-    if (Math.random() > 0.5) {
-        yMutationAmount *= -1;
-    }
-    point.x += xMutationAmount;
-    point.y += yMutationAmount;
-}
-
-export interface MutateConfig {
-    canvasWidth: number;
-    canvasHeight: number;
-
-    minPoints: number;
-    maxPoints: number;
-    minLineWidth: number;
-    maxLineWidth: number;
-
-    pointProbability: number;
-    minPoint: number;
-    maxPoint: number;
-    lineWidthProbability: number;
-    minLine: number;
-    maxLine: number;
-    strokeStyleProbability: number;
-    pathProbability: number;
-    addPathProbability: number;
-    removePathProbability: number;
-    addPointProbability: number;
-    removePointProbability: number;
-}
-
-export function mutatePath(path: Path, cfg: MutateConfig) {
-    for (let point of path.points) {
-        if (Math.random() < cfg.pointProbability) {
-            mutatePoint(point, cfg.minPoint, cfg.maxPoint);
+        type: "begin",
+        args: {
+            speed: Math.random() * 10 + 1,
+            strokeStyle: d3.rgb(
+                Math.random() * 255,
+                Math.random() * 255,
+                Math.random() * 255,
+            ).hex(),
+            lineWidth: Math.random() * 5 + 0.1,
+            x: Math.random() * canvasWidth,
+            y: Math.random() * canvasHeight,
         }
     }
-    // if (Math.random() < cfg.addPointProbability) {
-    //     const newPoint = clone(path.points[path.points.length - 1]);
-    //     mutatePoint(newPoint, cfg.minPoint, cfg.maxPoint);
-    //     path.points.push(newPoint);
-    // }
-    // if (Math.random() < cfg.removePointProbability && path.points.length > 2) {
-    //     path.points.splice(Math.floor(Math.random() * path.points.length))
-    // }
-    if (Math.random() < cfg.lineWidthProbability) {
-        let lineWidthMutationAmount = Math.random() * (cfg.maxLine - cfg.minLine) + cfg.minLine;
-        if (Math.random() > 0.5) {
-            lineWidthMutationAmount *= -1;
-        }
-        path.lineWidth += lineWidthMutationAmount;
-    }
-    // TODO: break into hsl and mutate each separately, convert back to hex code.
-    // there are good libraries for this..
-    if (Math.random() < cfg.strokeStyleProbability) {
-        path.strokeStyle = "#" + Math.floor(Math.random()*16777215).toString(16);
-    }
 }
 
-export function mutatePainting(painting: Painting, cfg: MutateConfig) {
-    for (let path of painting.paths) {
-        if (Math.random() < cfg.pathProbability) {
-            mutatePath(path, cfg);
+export function generateRandomInstruction(): Instruction {
+    const instructionType = instructionTypes[Math.floor(Math.random() * instructionTypes.length)];
+    return instructionGenerators[instructionType]();
+}
+
+const instructionGenerators = {
+    "strokeStyle": generateStrokeStyleInstruction,
+
+    // stubes
+    "position": generatePositionInstruction,
+    "lineWidth": generateLineWidthInstruction,
+    "speed": generateSpeedInstruction,
+}
+
+const instructionMutators = {
+    "strokeStyle": mutateStrokeStyleInstruction,
+    "position": mutatePositionInstruction,
+    "begin": mutateBeginInstruction,
+    "lineWidth": mutateBeginInstruction,
+    "speed": mutateBeginInstruction,
+}
+
+function generateStrokeStyleInstruction(): Instruction {
+    return {
+        type: "strokeStyle",
+        args: {
+            r: Math.random() * config.maxColorMutation * 2 - config.maxColorMutation,
+            g: Math.random() * config.maxColorMutation * 2 - config.maxColorMutation,
+            b: Math.random() * config.maxColorMutation * 2 - config.maxColorMutation,
+        }
+    };
+}
+
+function generatePositionInstruction(): Instruction {
+    return {
+        type: "position",
+        args: {
+            angle: Math.random() * Math.PI * 2,
+        },
+    };
+}
+
+function generateLineWidthInstruction(): Instruction {
+    return {
+        type: "lineWidth",
+        args: {
+            amount: Math.random() * config.maxLineWidthMutation * 2 - config.maxLineWidthMutation,
+        }
+    };
+}
+
+function generateSpeedInstruction(): Instruction {
+    return {
+        type: "speed",
+        args: {
+            amount: Math.random() * config.maxSpeedMutation * 2 - config.maxSpeedMutation
+        }
+    };
+}
+
+const config = {
+    maxMutationIterations: 100,
+    addPositionProbability: 0.3,
+    addStrokeStyleProbability: 0.1,
+    addSpeedProbability: 0.3,
+    addLineWidthProbability: 0.1,
+    mutateInstructionProbability: 0.3,
+    removeInstructionProbability: 0.3,
+
+    maxPositionMutation: Math.PI / 5,
+    maxColorMutation: 10,
+    maxLineWidthMutation: 2,
+    maxSpeedMutation: 1,
+};
+
+export function mutatePainting(painting: Painting) {
+    const iterations = Math.floor(Math.random() * config.maxMutationIterations);
+    for (let i = 0; i < iterations; i++) {
+        if (Math.random() < config.addPositionProbability) {
+            painting.instructions.push(generatePositionInstruction());
+        }
+        if (Math.random() < config.addStrokeStyleProbability) {
+            painting.instructions.push(generateStrokeStyleInstruction());
+        }
+        if (Math.random() < config.addLineWidthProbability) {
+            painting.instructions.push(generateLineWidthInstruction());
+        }
+        if (Math.random() < config.addSpeedProbability) {
+            painting.instructions.push(generateSpeedInstruction());
+        }
+        if (Math.random() < config.removeInstructionProbability && painting.instructions.length > 1) {
+            let index = Math.floor(Math.random() * painting.instructions.length - 1) + 1;
+            painting.instructions.splice(index, 1);
+        }
+        if (Math.random() < config.mutateInstructionProbability) {
+            const randomInstruction = painting.instructions[Math.floor(Math.random() * painting.instructions.length)];
+            instructionMutators[randomInstruction.type](randomInstruction);
         }
     }
-    if (Math.random() < cfg.addPathProbability) {
-        painting.paths.push(randomPath(cfg));
-    }
-    if (Math.random() < cfg.removePathProbability && painting.paths.length > 1) {
-        painting.paths.splice(Math.floor(Math.random() * painting.paths.length), 1);
-    }
+
 }
+
+export function mutateBeginInstruction(instruction: Instruction) {
+// I don't really want to implement this right now :)
+}
+
+export function mutateStrokeStyleInstruction(instruction: Instruction) {
+    instruction.args.r *= Math.random() + 0.5;
+    instruction.args.r = norm(instruction.args.r, 0, config.maxColorMutation);
+    instruction.args.g *= Math.random() + 0.5;
+    instruction.args.g = norm(instruction.args.g, 0, config.maxColorMutation);
+    instruction.args.b *= Math.random() + 0.5;
+    instruction.args.b = norm(instruction.args.b, 0, config.maxColorMutation);
+}
+
+export function mutatePositionInstruction(instruction: Instruction) {
+    const mutationAmount = Math.random() * config.maxPositionMutation * 2 - config.maxPositionMutation;
+    instruction.args.angle = wrap(instruction.args.angle + mutationAmount, 0, Math.PI * 2);
+}
+
 
 export function clone<T>(item: T): T {
     return JSON.parse(JSON.stringify(item));

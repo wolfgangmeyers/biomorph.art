@@ -1,7 +1,6 @@
-import { Painting } from "./model";
+import { Painting, Instruction } from "./model";
 import { clone, mutatePainting, generateRandomInstruction, generateBeginInstruction } from "./generator";
 import { render } from "./renderer";
-import { Instruction } from "./pathbuilder";
 
 let parentCanvas: HTMLCanvasElement;
 let parent: Painting;

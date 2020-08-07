@@ -1,7 +1,6 @@
 import * as d3 from "d3-color";
 
-import { Painting } from "./model";
-import { Instruction, InstructionType } from "./pathbuilder";
+import { Painting, InstructionType, Instruction } from "./model";
 import { norm, wrap } from "./norm";
 
 const instructionTypes: InstructionType[] = [

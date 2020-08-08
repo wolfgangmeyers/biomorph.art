@@ -14,19 +14,30 @@ const numChildren = 7;
 const undo = () => {
     if (history.length > 0) {
         parent = history.pop();
-        render(parent, parentCanvas, "Parent");
+        renderParent();
         generate();
     }
 };
+
+/**
+ * Relationships enabled?
+ */
+function rel(): boolean {
+    return (<HTMLInputElement>document.getElementById("relationships")).checked;
+}
 
 const setupChildCanvas = (canvas: HTMLCanvasElement, painting: Painting) => {
     canvas.addEventListener("click", () => {
         history.push(parent);
         parent = painting;
-        render(painting, parentCanvas, "Parent");
+        renderParent();
         generate();
     });
 }
+
+const renderParent = () => {
+    render(parent, parentCanvas, rel() ? "Parent" : "");
+};
 
 const generate = () => {
     children = [];
@@ -49,7 +60,7 @@ const generate = () => {
         mutatePainting(newPainting);
         children.push(newPainting);
 
-        render(newPainting, canvas, "Child");
+        render(newPainting, canvas, rel() ? "Child" : "");
         setupChildCanvas(canvas, newPainting);
     }
 };
@@ -70,7 +81,7 @@ const onLoadFile = (files: FileList) => {
             const paintingStr = fr.result.toString();
             try {
                 parent = JSON.parse(paintingStr);
-                render(parent, parentCanvas, "Parent");
+                renderParent();
                 generate();
             } catch (e) {
                 console.error(e);
@@ -94,7 +105,7 @@ const randomize = () => {
             { instructions }
         ]
     };
-    render(parent, parentCanvas, "Parent");
+    renderParent();
     generate();
 };
 
@@ -108,6 +119,10 @@ const onLoad = () => {
     document.getElementById("undo").addEventListener("click", undo);
     document.getElementById("save").addEventListener("click", save);
     document.getElementById("load").addEventListener("change", evt => onLoadFile((<HTMLInputElement>evt.target).files));
+    document.getElementById("relationships").addEventListener("change", () => {
+        renderParent();
+        generate();
+    });
 
     parentCanvas.addEventListener("click", generate);
 }

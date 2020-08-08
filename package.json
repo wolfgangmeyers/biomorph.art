@@ -11,7 +11,8 @@
     },
     "scripts": {
         "dev": "parcel index.html",
-        "build": "parcel build index.html"
+        "build": "parcel build index.html",
+        "publish": "yarn run build && rm docs/*.js && rm docs/*.map && rm docs/*.html && cp dist/* docs/"
     },
     "dependencies": {
         "d3-color": "^1.4.1",

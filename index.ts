@@ -1,3 +1,4 @@
+import { saveAs } from "file-saver";
 import { Painting, Instruction } from "./model";
 import { clone, mutatePainting, generateRandomInstruction, generateBeginInstruction } from "./generator";
 import { render } from "./renderer";
@@ -53,6 +54,35 @@ const generate = () => {
     }
 };
 
+const save = () => {
+    const filename = prompt("Save file as:", "painting.txt");
+    if (filename) {
+        const blob = new Blob([JSON.stringify(parent)], { type: "text/plain" });
+        saveAs(blob, filename)
+    }
+}
+
+const onLoadFile = (files: FileList) => {
+    // FileReader support
+    if (FileReader && files && files.length) {
+        const fr = new FileReader();
+        fr.onload = () => {
+            const paintingStr = fr.result.toString();
+            try {
+                parent = JSON.parse(paintingStr);
+                render(parent, parentCanvas, "Parent");
+                generate();
+            } catch (e) {
+                console.error(e);
+                alert("Could not load painting");
+            }
+        };
+        fr.readAsText(files[0]);
+    } else {
+        alert("Your browser can't load files. Try chrome, safari, firefox or edge");
+    }
+}
+
 const randomize = () => {
     const instructions: Instruction[] = [generateBeginInstruction(parentCanvas.width, parentCanvas.height)];
     const initialInstructionCount = Math.floor(Math.random() * 100);
@@ -61,7 +91,7 @@ const randomize = () => {
     }
     parent = {
         paths: [
-            {instructions}
+            { instructions }
         ]
     };
     render(parent, parentCanvas, "Parent");
@@ -76,6 +106,8 @@ const onLoad = () => {
     restartButton.addEventListener("click", randomize);
 
     document.getElementById("undo").addEventListener("click", undo);
+    document.getElementById("save").addEventListener("click", save);
+    document.getElementById("load").addEventListener("change", evt => onLoadFile((<HTMLInputElement>evt.target).files));
 
     parentCanvas.addEventListener("click", generate);
 }

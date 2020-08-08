@@ -1,14 +1,8 @@
 import * as d3 from "d3-color";
 
-import { Painting, InstructionType, Instruction } from "./model";
+import { Painting, InstructionType, Instruction, Mode } from "./model";
 import { norm, wrap } from "./norm";
-
-const instructionTypes: InstructionType[] = [
-    "strokeStyle",
-    "position",
-    "lineWidth",
-    "speed"
-];
+import { fa_unicodes } from "./fa";
 
 export function generateBeginInstruction(canvasWidth: number, canvasHeight: number): Instruction {
 
@@ -28,18 +22,27 @@ export function generateBeginInstruction(canvasWidth: number, canvasHeight: numb
     }
 }
 
-export function generateRandomInstruction(): Instruction {
+export function generateRandomInstruction(mode: Mode): Instruction {
+    const instructionTypes: InstructionType[] = [
+        "strokeStyle",
+        "lineWidth",
+        "speed",
+    ];
+    if (mode == "lines") {
+        instructionTypes.push("position");
+    } else {
+        instructionTypes.push("icon");
+    }
     const instructionType = instructionTypes[Math.floor(Math.random() * instructionTypes.length)];
     return instructionGenerators[instructionType]();
 }
 
 const instructionGenerators = {
     "strokeStyle": generateStrokeStyleInstruction,
-
-    // stubes
     "position": generatePositionInstruction,
     "lineWidth": generateLineWidthInstruction,
     "speed": generateSpeedInstruction,
+    "icon": generateIconInstruction,
 }
 
 const instructionMutators = {
@@ -49,6 +52,22 @@ const instructionMutators = {
     "lineWidth": mutateLineWidthInstruction,
     "speed": mutateBeginInstruction,
     "end": mutateBeginInstruction,
+    "icon": mutateBeginInstruction,
+}
+
+function generateIconInstruction(): Instruction {
+    // size, angle, icon
+    const size = Math.floor(Math.random() * 20 + 6) + "px";
+    const angle = Math.random() * Math.PI * 2;
+    const icon = fa_unicodes[Math.floor(Math.random() * fa_unicodes.length)];
+    return {
+        type: "icon",
+        args: {
+            size,
+            angle,
+            icon
+        }
+    }
 }
 
 function generateStrokeStyleInstruction(): Instruction {
@@ -92,6 +111,7 @@ function generateSpeedInstruction(): Instruction {
 const config = {
     maxMutationIterations: 200,
     addPositionProbability: 0.3,
+    addIconProbability: 0.3,
     addStrokeStyleProbability: 0.1,
     addSpeedProbability: 0.3,
     addLineWidthProbability: 0.1,
@@ -107,11 +127,11 @@ const config = {
     maxSpeedMutation: 1,
 };
 
-export function mutatePainting(painting: Painting) {
+export function mutatePainting(painting: Painting, mode: Mode) {
     const iterations = Math.floor(Math.random() * config.maxMutationIterations);
     for (let i = 0; i < iterations; i++) {
         const path = painting.paths[Math.floor(Math.random() * painting.paths.length)];
-        if (Math.random() < config.addPositionProbability) {
+        if (Math.random() < config.addPositionProbability && mode == "lines") {
             path.instructions.push(generatePositionInstruction());
         }
         if (Math.random() < config.addStrokeStyleProbability) {
@@ -122,6 +142,9 @@ export function mutatePainting(painting: Painting) {
         }
         if (Math.random() < config.addSpeedProbability) {
             path.instructions.push(generateSpeedInstruction());
+        }
+        if (Math.random() < config.addIconProbability && mode == "icons") {
+            path.instructions.push(generateIconInstruction());
         }
         if (Math.random() < config.removeInstructionProbability && path.instructions.length > 1) {
             let index = Math.floor(Math.random() * path.instructions.length - 1) + 1;

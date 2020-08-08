@@ -1,5 +1,5 @@
 import { saveAs } from "file-saver";
-import { Painting, Instruction } from "./model";
+import { Painting, Instruction, Mode } from "./model";
 import { clone, mutatePainting, generateRandomInstruction, generateBeginInstruction } from "./generator";
 import { render } from "./renderer";
 
@@ -19,6 +19,10 @@ const undo = () => {
     }
 };
 
+function mode(): Mode {
+    return (<HTMLSelectElement>document.getElementById("mode")).value as Mode;
+}
+
 /**
  * Relationships enabled?
  */
@@ -36,7 +40,7 @@ const setupChildCanvas = (canvas: HTMLCanvasElement, painting: Painting) => {
 }
 
 const renderParent = () => {
-    render(parent, parentCanvas, rel() ? "Parent" : "");
+    render(parent, parentCanvas, mode(), rel() ? "Parent" : "");
 };
 
 const generate = () => {
@@ -57,10 +61,10 @@ const generate = () => {
         container.appendChild(canvas);
 
         const newPainting = clone(parent);
-        mutatePainting(newPainting);
+        mutatePainting(newPainting, mode());
         children.push(newPainting);
 
-        render(newPainting, canvas, rel() ? "Child" : "");
+        render(newPainting, canvas, mode(), rel() ? "Child" : "");
         setupChildCanvas(canvas, newPainting);
     }
 };
@@ -98,7 +102,7 @@ const randomize = () => {
     const instructions: Instruction[] = [generateBeginInstruction(parentCanvas.width, parentCanvas.height)];
     const initialInstructionCount = Math.floor(Math.random() * 100);
     for (let i = 0; i < initialInstructionCount; i++) {
-        instructions.push(generateRandomInstruction());
+        instructions.push(generateRandomInstruction(mode()));
     }
     parent = {
         paths: [

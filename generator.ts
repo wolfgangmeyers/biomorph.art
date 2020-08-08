@@ -57,7 +57,7 @@ const instructionMutators = {
 
 function generateIconInstruction(): Instruction {
     // size, angle, icon
-    const size = Math.floor(Math.random() * 20 + 6) + "px";
+    const size = Math.floor(Math.random() * 30 + 4) + "px";
     const angle = Math.random() * Math.PI * 2;
     const icon = fa_unicodes[Math.floor(Math.random() * fa_unicodes.length)];
     return {

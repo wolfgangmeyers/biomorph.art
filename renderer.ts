@@ -65,8 +65,10 @@ const processors: InstructionProcessorSet = {
         builder.y += Math.sin(args.angle) * builder.speed;
         builder.y = norm(builder.y, 0, ctx.canvas.height);
         ctx.save();
+
+        ctx.translate(builder.x, builder.y);
         ctx.rotate(args.angle);
-        ctx.fillText(args.icon, builder.x, builder.y);
+        ctx.fillText(args.icon, 0, 0);
         ctx.restore();
     },
     "end": (ctx: CanvasRenderingContext2D, builder: PathBuilder, args: any) => {

@@ -11,6 +11,7 @@ const processors: InstructionProcessorSet = {
         builder.y = args.y;
 
         ctx.strokeStyle = builder.strokeStyle;
+        ctx.fillStyle = builder.strokeStyle;
         ctx.lineWidth = builder.lineWidth;
         ctx.lineCap = "round";
         if (builder.mode == "lines") {

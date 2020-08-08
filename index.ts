@@ -1,3 +1,6 @@
+import $ from "jquery";
+import "bootstrap";
+
 import { saveAs } from "file-saver";
 import { Painting, Instruction, Mode } from "./model";
 import { clone, mutatePainting, generateRandomInstruction, generateBeginInstruction } from "./generator";

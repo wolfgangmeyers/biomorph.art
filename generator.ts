@@ -3,7 +3,7 @@ import * as d3 from "d3-color";
 import { Painting, InstructionType, Instruction, Mode } from "./model";
 import { norm, wrap } from "./norm";
 import { fa_unicodes } from "./fa";
-import { mutationAmount } from "./config";
+import { mutationAmount, colorMutationAmount, speedMutationProbability, lineWidthMutationProbability } from "./config";
 
 export function generateBeginInstruction(canvasWidth: number, canvasHeight: number): Instruction {
 
@@ -51,7 +51,7 @@ const instructionMutators = {
     "position": mutatePositionInstruction,
     "begin": mutateBeginInstruction,
     "lineWidth": mutateLineWidthInstruction,
-    "speed": mutateBeginInstruction,
+    "speed": mutateSpeedInstruction,
     "end": mutateBeginInstruction,
     "icon": mutateBeginInstruction,
 }
@@ -135,10 +135,10 @@ export function mutatePainting(painting: Painting, mode: Mode) {
         if (Math.random() < config.addPositionProbability && mode == "lines") {
             path.instructions.push(generatePositionInstruction());
         }
-        if (Math.random() < config.addStrokeStyleProbability) {
+        if (Math.random() < colorMutationAmount()) {
             path.instructions.push(generateStrokeStyleInstruction());
         }
-        if (Math.random() < config.addLineWidthProbability) {
+        if (Math.random() < lineWidthMutationProbability()) {
             path.instructions.push(generateLineWidthInstruction());
         }
         if (Math.random() < config.addSpeedProbability) {
@@ -177,6 +177,9 @@ export function mutateBeginInstruction(instruction: Instruction) {
 }
 
 export function mutateStrokeStyleInstruction(instruction: Instruction) {
+    if (Math.random() >= colorMutationAmount()) {
+        return;
+    }
     instruction.args.r *= Math.random() + 0.5;
     instruction.args.r = norm(instruction.args.r, -config.maxColorMutation, config.maxColorMutation);
     instruction.args.g *= Math.random() + 0.5;
@@ -191,11 +194,17 @@ export function mutatePositionInstruction(instruction: Instruction) {
 }
 
 function mutateLineWidthInstruction(instruction: Instruction) {
+    if (Math.random() >= lineWidthMutationProbability()) {
+        return;
+    }
     const mutationAmount = Math.random() * config.maxLineWidthMutation * 2 - config.maxLineWidthMutation;
     instruction.args.amount = norm(instruction.args.amount + mutationAmount, -config.maxLineWidthMutation, config.maxLineWidthMutation);
 }
 
 function mutateSpeedInstruction(instruction: Instruction) {
+    if (Math.random() >= speedMutationProbability()) {
+        return;
+    }
     const mutationAmount = Math.random() * config.maxSpeedMutation * 2 - config.maxSpeedMutation;
     instruction.args.amount = norm(instruction.args.amount + mutationAmount, -config.maxSpeedMutation, config.maxSpeedMutation);
 }

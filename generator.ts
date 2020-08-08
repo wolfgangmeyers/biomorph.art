@@ -3,6 +3,7 @@ import * as d3 from "d3-color";
 import { Painting, InstructionType, Instruction, Mode } from "./model";
 import { norm, wrap } from "./norm";
 import { fa_unicodes } from "./fa";
+import { mutationAmount } from "./config";
 
 export function generateBeginInstruction(canvasWidth: number, canvasHeight: number): Instruction {
 
@@ -112,7 +113,7 @@ const config = {
     maxMutationIterations: 200,
     addPositionProbability: 0.3,
     addIconProbability: 0.3,
-    addStrokeStyleProbability: 0.1,
+    addStrokeStyleProbability: 0.5,
     addSpeedProbability: 0.3,
     addLineWidthProbability: 0.1,
 
@@ -128,7 +129,7 @@ const config = {
 };
 
 export function mutatePainting(painting: Painting, mode: Mode) {
-    const iterations = Math.floor(Math.random() * config.maxMutationIterations);
+    const iterations = mutationAmount();
     for (let i = 0; i < iterations; i++) {
         const path = painting.paths[Math.floor(Math.random() * painting.paths.length)];
         if (Math.random() < config.addPositionProbability && mode == "lines") {

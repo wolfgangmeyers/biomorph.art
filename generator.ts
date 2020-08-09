@@ -3,7 +3,7 @@ import * as d3 from "d3-color";
 import { Painting, InstructionType, Instruction, Mode } from "./model";
 import { norm, wrap } from "./norm";
 import { fa_unicodes } from "./fa";
-import { mutationAmount, colorMutationAmount, speedMutationProbability, lineWidthMutationProbability } from "./config";
+import { mutationAmount, colorMutationProbability, speedMutationProbability, lineWidthMutationProbability, iconMutationProbability, deleteInstructionProbability, newPathProbability, deletePathProbability, lineMutationProbability, maxLineWidth, maxLineWidthMutation, maxSpeedMutation } from "./config";
 
 export function generateBeginInstruction(canvasWidth: number, canvasHeight: number): Instruction {
 
@@ -95,7 +95,7 @@ function generateLineWidthInstruction(): Instruction {
     return {
         type: "lineWidth",
         args: {
-            amount: Math.random() * config.maxLineWidthMutation * 2 - config.maxLineWidthMutation,
+            amount: Math.random() * maxLineWidth() * 2 - maxLineWidth(),
         }
     };
 }
@@ -110,21 +110,8 @@ function generateSpeedInstruction(): Instruction {
 }
 
 const config = {
-    maxMutationIterations: 200,
-    addPositionProbability: 0.3,
-    addIconProbability: 0.3,
-    addStrokeStyleProbability: 0.5,
-    addSpeedProbability: 0.3,
-    addLineWidthProbability: 0.1,
-
-    mutateInstructionProbability: 0.3,
-    removeInstructionProbability: 0.3,
-    startNewPathProbability: 0.005,
-    removePathProbability: 0.005,
-
     maxPositionMutation: Math.PI / 5,
     maxColorMutation: 10,
-    maxLineWidthMutation: 2,
     maxSpeedMutation: 1,
 };
 
@@ -132,31 +119,29 @@ export function mutatePainting(painting: Painting, mode: Mode) {
     const iterations = mutationAmount();
     for (let i = 0; i < iterations; i++) {
         const path = painting.paths[Math.floor(Math.random() * painting.paths.length)];
-        if (Math.random() < config.addPositionProbability && mode == "lines") {
+        if (Math.random() < lineMutationProbability() && mode == "lines") {
             path.instructions.push(generatePositionInstruction());
         }
-        if (Math.random() < colorMutationAmount()) {
+        if (Math.random() < colorMutationProbability()) {
             path.instructions.push(generateStrokeStyleInstruction());
         }
         if (Math.random() < lineWidthMutationProbability()) {
             path.instructions.push(generateLineWidthInstruction());
         }
-        if (Math.random() < config.addSpeedProbability) {
+        if (Math.random() < speedMutationProbability()) {
             path.instructions.push(generateSpeedInstruction());
         }
-        if (Math.random() < config.addIconProbability && mode == "icons") {
+        if (Math.random() < iconMutationProbability() && mode == "icons") {
             path.instructions.push(generateIconInstruction());
         }
-        if (Math.random() < config.removeInstructionProbability && path.instructions.length > 1) {
+        if (Math.random() < deleteInstructionProbability() && path.instructions.length > 1) {
             let index = Math.floor(Math.random() * path.instructions.length - 1) + 1;
             path.instructions.splice(index, 1);
         }
-        if (Math.random() < config.mutateInstructionProbability) {
-            const randomInstruction = path.instructions[Math.floor(Math.random() * path.instructions.length)];
-            instructionMutators[randomInstruction.type](randomInstruction);
-        }
-        // TODO: maybe remodel to have multiple paths?
-        if (Math.random() < config.startNewPathProbability) {
+        const randomInstruction = path.instructions[Math.floor(Math.random() * path.instructions.length)];
+        instructionMutators[randomInstruction.type](randomInstruction);
+
+        if (Math.random() < newPathProbability()) {
             painting.paths.push({
                 instructions: [
                     // TODO: refactor canvas width out
@@ -165,7 +150,7 @@ export function mutatePainting(painting: Painting, mode: Mode) {
                 ]
             })
         }
-        if (Math.random() < config.removePathProbability && painting.paths.length > 1) {
+        if (Math.random() < deletePathProbability() && painting.paths.length > 1) {
             painting.paths.splice(Math.floor(Math.random() * painting.paths.length), 1);
         }
     }
@@ -177,7 +162,7 @@ export function mutateBeginInstruction(instruction: Instruction) {
 }
 
 export function mutateStrokeStyleInstruction(instruction: Instruction) {
-    if (Math.random() >= colorMutationAmount()) {
+    if (Math.random() >= colorMutationProbability()) {
         return;
     }
     instruction.args.r *= Math.random() + 0.5;
@@ -197,16 +182,16 @@ function mutateLineWidthInstruction(instruction: Instruction) {
     if (Math.random() >= lineWidthMutationProbability()) {
         return;
     }
-    const mutationAmount = Math.random() * config.maxLineWidthMutation * 2 - config.maxLineWidthMutation;
-    instruction.args.amount = norm(instruction.args.amount + mutationAmount, -config.maxLineWidthMutation, config.maxLineWidthMutation);
+    const mutationAmount = Math.random() * maxLineWidthMutation() * 2 - maxLineWidthMutation();
+    instruction.args.amount = norm(instruction.args.amount + mutationAmount, -maxLineWidthMutation(), maxLineWidthMutation());
 }
 
 function mutateSpeedInstruction(instruction: Instruction) {
     if (Math.random() >= speedMutationProbability()) {
         return;
     }
-    const mutationAmount = Math.random() * config.maxSpeedMutation * 2 - config.maxSpeedMutation;
-    instruction.args.amount = norm(instruction.args.amount + mutationAmount, -config.maxSpeedMutation, config.maxSpeedMutation);
+    const mutationAmount = Math.random() * maxSpeedMutation() * 2 - maxSpeedMutation();
+    instruction.args.amount = norm(instruction.args.amount + mutationAmount, -maxSpeedMutation(), maxSpeedMutation());
 }
 
 export function clone<T>(item: T): T {

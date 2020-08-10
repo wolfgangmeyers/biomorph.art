@@ -1,5 +1,5 @@
 import { Painting, PathBuilder, InstructionProcessorSet, Mode } from "./model";
-import { norm } from "./norm";
+import { norm, wrap } from "./norm";
 import * as d3 from "d3-color";
 import { maxLineWidth, maxSpeed, transparentBackground, angleRestriction, maxLineWidthMutation } from "./config";
 
@@ -61,12 +61,12 @@ const processors: InstructionProcessorSet = {
             ctx.moveTo(builder.x, builder.y);
         }
         builder.lineWidth += args.amount;
-        builder.lineWidth = norm(builder.lineWidth, 0.01, 1);
+        builder.lineWidth = wrap(builder.lineWidth, 0.01, 1);
         ctx.lineWidth = maxLineWidth() * builder.lineWidth;
     },
     "speed": (ctx: CanvasRenderingContext2D, builder: PathBuilder, args: any) => {
         builder.speed += args.amount;
-        builder.speed = norm(builder.speed, 0.5, maxSpeed());
+        builder.speed = wrap(builder.speed, 0.5, maxSpeed());
     },
     "icon": (ctx: CanvasRenderingContext2D, builder: PathBuilder, args: any) => {
         ctx.font = `600 ${args.size} "Font Awesome 5 Free"`;

@@ -32,7 +32,7 @@
 
 
     <div class="modal" id="export-image-modal">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-xl">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Export Image</h5>
@@ -40,7 +40,7 @@
                 <div class="modal-body">
                     Right click and save image
                     <hr/>
-                    <canvas width="4000" height="4000" id="export-image-canvas" style="background-color: #000; width: 600px; height: 600px; border: 1px solid black; margin: 10px;"></canvas>
+                    <canvas width="4000" height="4000" id="export-image-canvas" style="background-color: #000; width: 1000px; height: 1000px; border: 1px solid black; margin: 10px;"></canvas>
                 </div>
             </div>
         </div>
@@ -64,10 +64,23 @@
                             <input type="checkbox" id="relationships" checked="checked" />
                         </div>
                         <div class="form-group">
+                            Export Image Transparent Background:
+                            <input type="checkbox" id="transparent-bg" checked="checked" />
+                        </div>
+                        <div class="form-group">
                             Mode:
                             <select id="mode">
                                 <option selected value="lines">Lines</option>
                                 <option value="icons">Icons</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            Movement Angle Restriction
+                            <select id="angle-restriction">
+                                <option selected value="none">None</option>
+                                <option value="60">60&deg; angles</option>
+                                <option value="90">90&deg; angles</option>
+                                <option value="120">120&deg; angles</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -95,7 +108,7 @@
                         </div>
                         <div class="form-group">
                             Max Line Width Mutation:
-                            <input type="range" min="0.5" max="10.0" step="0.1" value="5.0" id="maxLineWidthMutation" />
+                            <input type="range" min="0.01" max="1" step="0.01" value="0.1" id="maxLineWidthMutation" />
                         </div>
                         <div class="form-group">
                             Max Line Width:

@@ -1,3 +1,9 @@
+import { Mode } from "./model";
+
+export function mode(): Mode {
+    return (<HTMLSelectElement>document.getElementById("mode")).value as Mode;
+}
+
 export function mutationAmount(): number {
     return parseInt((<HTMLInputElement>document.getElementById("mutationAmount")).value);
 }
@@ -48,4 +54,45 @@ export function maxSpeed(): number {
 
 export function maxSpeedMutation(): number {
     return parseFloat((<HTMLInputElement>document.getElementById("maxSpeedMutation")).value);
+}
+
+export function transparentBackground(): boolean {
+    return (<HTMLInputElement>document.getElementById("transparent-bg")).checked;
+}
+
+export function angleRestriction(): string {
+    return (<HTMLInputElement>document.getElementById("angle-restriction")).value;
+}
+
+export const configKeys = [
+    "mode",
+    "mutationAmount",
+    "colorMutationProbability",
+    "speedMutationProbability",
+    "lineWidthMutationProbability",
+    "lineMutationProbability",
+    "iconMutationProbability",
+    "deleteInstructionProbability",
+    "newPathProbability",
+    "deletePathProbability",
+    "maxLineWidthMutation",
+    "maxLineWidth",
+    "maxSpeed",
+    "maxSpeedMutation",
+    "transparent-bg",
+    "angle-restriction"
+];
+
+export function getConfig(): any {
+    const config = {};
+    for (let key of configKeys) {
+        config[key] = (<HTMLInputElement>document.getElementById(key)).value;
+    }
+    return config;
+}
+
+export function setConfig(config: any) {
+    for (let key of configKeys) {
+        (<HTMLInputElement>document.getElementById(key)).value = config[key] as string;
+    }
 }

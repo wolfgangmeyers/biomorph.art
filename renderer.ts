@@ -1,7 +1,7 @@
 import { Painting, PathBuilder, InstructionProcessorSet, Mode } from "./model";
 import { norm } from "./norm";
 import * as d3 from "d3-color";
-import { maxLineWidth, maxSpeed } from "./config";
+import { maxLineWidth, maxSpeed, transparentBackground, angleRestriction, maxLineWidthMutation } from "./config";
 
 const processors: InstructionProcessorSet = {
     "begin": (ctx: CanvasRenderingContext2D, builder: PathBuilder, args: any) => {
@@ -38,9 +38,17 @@ const processors: InstructionProcessorSet = {
         ctx.fillStyle = builder.strokeStyle;
     },
     "position": (ctx: CanvasRenderingContext2D, builder: PathBuilder, args: any) => {
-        builder.x += Math.cos(args.angle) * builder.speed;
+        let angle = args.angle;
+        if (angleRestriction() == "60") {
+            angle = Math.floor(angle / (Math.PI * 2 / 6)) * (Math.PI * 2 / 6);
+        } else if (angleRestriction() == "90") {
+            angle = Math.floor(angle / (Math.PI / 2)) * (Math.PI / 2);
+        } else if (angleRestriction() == "120") {
+            angle = Math.floor(angle / (Math.PI * 2 / 3)) * (Math.PI * 2 / 3);
+        }
+        builder.x += Math.cos(angle) * builder.speed;
         builder.x = norm(builder.x, 0, ctx.canvas.width);
-        builder.y += Math.sin(args.angle) * builder.speed;
+        builder.y += Math.sin(angle) * builder.speed;
         builder.y = norm(builder.y, 0, ctx.canvas.height);
         if (builder.mode == "lines") {
             ctx.lineTo(builder.x, builder.y);
@@ -53,8 +61,8 @@ const processors: InstructionProcessorSet = {
             ctx.moveTo(builder.x, builder.y);
         }
         builder.lineWidth += args.amount;
-        builder.lineWidth = norm(builder.lineWidth, 0.5, maxLineWidth());
-        ctx.lineWidth = builder.lineWidth;
+        builder.lineWidth = norm(builder.lineWidth, 0.01, 1);
+        ctx.lineWidth = maxLineWidth() * builder.lineWidth;
     },
     "speed": (ctx: CanvasRenderingContext2D, builder: PathBuilder, args: any) => {
         builder.speed += args.amount;
@@ -80,8 +88,12 @@ const processors: InstructionProcessorSet = {
 
 export function render(painting: Painting, canvas: HTMLCanvasElement, mode: Mode, label?: string, scale?: number) {
     const ctx = canvas.getContext("2d");
-    ctx.fillStyle = "#000";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    if (transparentBackground()) {
+        ctx.fillStyle = "#000";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    } else {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
 
     const pathBuilder: PathBuilder = {
         speed: 0,

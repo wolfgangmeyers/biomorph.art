@@ -16,7 +16,7 @@ export function generateBeginInstruction(canvasWidth: number, canvasHeight: numb
                 Math.random() * 255,
                 Math.random() * 255,
             ).hex(),
-            lineWidth: Math.random() * 5 + 0.1,
+            lineWidth: (Math.random() * 0.99) + 0.01,
             x: Math.random() * canvasWidth,
             y: Math.random() * canvasHeight,
         }
@@ -95,7 +95,7 @@ function generateLineWidthInstruction(): Instruction {
     return {
         type: "lineWidth",
         args: {
-            amount: Math.random() * maxLineWidth() * 2 - maxLineWidth(),
+            amount: (Math.random() * 0.99) + 0.01,
         }
     };
 }

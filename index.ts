@@ -5,6 +5,7 @@ import { saveAs } from "file-saver";
 import { Painting, Instruction, Mode } from "./model";
 import { clone, mutatePainting, generateRandomInstruction, generateBeginInstruction } from "./generator";
 import { render } from "./renderer";
+import { mode, getConfig, setConfig } from "./config";
 
 let parentCanvas: HTMLCanvasElement;
 let _parent: Painting;
@@ -12,7 +13,10 @@ let children: Array<Painting>;
 
 function setParent(parent: Painting) {
     _parent = parent;
-    localStorage.setItem("parent", JSON.stringify(parent));
+    const config = getConfig();
+    localStorage.setItem("parent", JSON.stringify({
+        parent: _parent, config,
+    }));
 }
 
 const history: Painting[] = [];
@@ -27,14 +31,11 @@ const undo = () => {
     }
 };
 
-function mode(): Mode {
-    return (<HTMLSelectElement>document.getElementById("mode")).value as Mode;
-}
 
 /**
  * Relationships enabled?
  */
-function rel(): boolean {
+export function rel(): boolean {
     return (<HTMLInputElement>document.getElementById("relationships")).checked;
 }
 
@@ -78,9 +79,11 @@ const generate = () => {
 };
 
 const save = () => {
+    const parent = _parent;
+    const config = getConfig();
     const filename = prompt("Save file as:", "painting.txt");
     if (filename) {
-        const blob = new Blob([JSON.stringify(parent)], { type: "text/plain" });
+        const blob = new Blob([JSON.stringify({parent, config})], { type: "text/plain" });
         saveAs(blob, filename)
     }
 }
@@ -92,7 +95,9 @@ const onLoadFile = (files: FileList) => {
         fr.onload = () => {
             const paintingStr = fr.result.toString();
             try {
-                parent = JSON.parse(paintingStr);
+                const {parent, config} = JSON.parse(paintingStr);
+                setParent(parent);
+                setConfig(config);
                 renderParent();
                 generate();
             } catch (e) {
@@ -124,7 +129,9 @@ const randomize = () => {
 const onLoad = () => {
     parentCanvas = document.getElementById("canvas") as HTMLCanvasElement;
     try {
-        setParent(JSON.parse(localStorage.getItem("parent")));
+        const {parent, config} = JSON.parse(localStorage.getItem("parent"));
+        setParent(parent);
+        setConfig(config);
         renderParent();
         generate();
     } catch(_) {

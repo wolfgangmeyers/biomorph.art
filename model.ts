@@ -24,3 +24,4 @@ export interface Painting {
 export interface Path {
     instructions: Instruction[];
 }
+

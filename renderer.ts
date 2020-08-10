@@ -78,9 +78,10 @@ const processors: InstructionProcessorSet = {
     }
 }
 
-export function render(painting: Painting, canvas: HTMLCanvasElement, mode: Mode, label?: string) {
+export function render(painting: Painting, canvas: HTMLCanvasElement, mode: Mode, label?: string, scale?: number) {
     const ctx = canvas.getContext("2d");
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     const pathBuilder: PathBuilder = {
         speed: 0,
@@ -88,8 +89,11 @@ export function render(painting: Painting, canvas: HTMLCanvasElement, mode: Mode
         lineWidth: 1,
         x: 0,
         y: 0,
-        mode
+        mode,
+        scale: scale || 1
     };
+    ctx.save();
+    ctx.scale(scale, scale);
     for (let path of painting.paths) {
         for (let instruction of path.instructions) {
             processors[instruction.type](ctx, pathBuilder, instruction.args);
@@ -105,5 +109,5 @@ export function render(painting: Painting, canvas: HTMLCanvasElement, mode: Mode
         // ctx.font = '600 48px "Font Awesome 5 Free"';
         // ctx.strokeText("\uf829", 200, 200);
     }
-
+    ctx.restore();
 }

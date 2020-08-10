@@ -5,6 +5,7 @@ export interface PathBuilder {
     x: number;
     y: number;
     mode: Mode;
+    scale: number;
 }
 
 export interface Instruction {

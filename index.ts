@@ -142,8 +142,21 @@ const onLoad = () => {
         renderParent();
         generate();
     });
+    // document.getElementById("export-image-button").addEventListener("click", onExportImage);
+    $("#export-image-modal").on("shown.bs.modal", onExportImage);
 
     parentCanvas.addEventListener("click", generate);
+}
+
+function onExportImage() {
+    const canvas = <HTMLCanvasElement>document.getElementById("export-image-canvas");
+    render(_parent, canvas, mode(), null, 10);
+    // $("#export-image-modal").modal({
+    //     backdrop: true,
+    //     focus: true,
+    //     keyboard: true,
+    //     show: true,
+    // });
 }
 
 if (document.readyState === "complete") {

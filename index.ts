@@ -7,8 +7,13 @@ import { clone, mutatePainting, generateRandomInstruction, generateBeginInstruct
 import { render } from "./renderer";
 
 let parentCanvas: HTMLCanvasElement;
-let parent: Painting;
+let _parent: Painting;
 let children: Array<Painting>;
+
+function setParent(parent: Painting) {
+    _parent = parent;
+    localStorage.setItem("parent", JSON.stringify(parent));
+}
 
 const history: Painting[] = [];
 
@@ -16,7 +21,7 @@ const numChildren = 7;
 
 const undo = () => {
     if (history.length > 0) {
-        parent = history.pop();
+        setParent(history.pop());
         renderParent();
         generate();
     }
@@ -35,15 +40,15 @@ function rel(): boolean {
 
 const setupChildCanvas = (canvas: HTMLCanvasElement, painting: Painting) => {
     canvas.addEventListener("click", () => {
-        history.push(parent);
-        parent = painting;
+        history.push(_parent);
+        setParent(painting);
         renderParent();
         generate();
     });
 }
 
 const renderParent = () => {
-    render(parent, parentCanvas, mode(), rel() ? "Parent" : "");
+    render(_parent, parentCanvas, mode(), rel() ? "Parent" : "");
 };
 
 const generate = () => {
@@ -63,7 +68,7 @@ const generate = () => {
         )
         container.appendChild(canvas);
 
-        const newPainting = clone(parent);
+        const newPainting = clone(_parent);
         mutatePainting(newPainting, mode());
         children.push(newPainting);
 
@@ -107,18 +112,25 @@ const randomize = () => {
     for (let i = 0; i < initialInstructionCount; i++) {
         instructions.push(generateRandomInstruction(mode()));
     }
-    parent = {
+    setParent({
         paths: [
             { instructions }
         ]
-    };
+    });
     renderParent();
     generate();
 };
 
 const onLoad = () => {
     parentCanvas = document.getElementById("canvas") as HTMLCanvasElement;
-    randomize();
+    try {
+        setParent(JSON.parse(localStorage.getItem("parent")));
+        renderParent();
+        generate();
+    } catch(_) {
+        randomize();
+    }
+
 
     const restartButton = document.getElementById("restart");
     restartButton.addEventListener("click", randomize);
